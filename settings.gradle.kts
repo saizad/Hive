@@ -26,3 +26,4 @@ dependencyResolutionManagement {
 rootProject.name = "Hive"
 include(":app")
 include(":hive")
+include(":mylibrary")

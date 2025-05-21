@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("dagger.hilt.android.plugin")
@@ -12,8 +12,9 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+
 android {
-    namespace = "com.hive"
+    namespace = "com.hive.mylibrary"
     compileSdk = 35
 
     defaultConfig {
@@ -39,7 +40,6 @@ android {
         jvmTarget = "11"
     }
 }
-
 dependencies {
 
     // **Core Libraries**
