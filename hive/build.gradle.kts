@@ -161,9 +161,9 @@ dependencies {
 
 
     // **Hilt Testing**
-    androidTestImplementation(libs.hilt.android.testing)
-    testImplementation(libs.hilt.android.testing)
-    kaptAndroidTest(libs.hilt.android.compiler)
+//    androidTestImplementation(libs.hilt.android.testing)
+//    testImplementation(libs.hilt.android.testing)
+//    kaptAndroidTest(libs.hilt.android.compiler)
 
 
     // **Dependency Injection (Hilt)**
@@ -171,4 +171,6 @@ dependencies {
     androidTestImplementation(project(":app"))
     kapt(libs.hilt.android.compiler)
     implementation("com.google.code.gson:gson:2.13.1")
+    implementation("com.github.saizad:PulseField:6bcff2407e7f0a6b3fc9d9bb75d96e1128ee6138")
+
 }
