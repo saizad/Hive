@@ -23,7 +23,7 @@ inline fun <reified T> Context.componentIntent(config: Intent.() -> Unit = {}): 
 }
 
 /**
- * Creates an intent to pick an image from the gallery with cropping and scaling configurations.
+ * Creates an intent to pick an image from the gallery with cropping and scaling configurationsxx.
  */
 fun imagePickerIntent(): Intent {
     return Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI).apply {
@@ -42,7 +42,7 @@ fun imagePickerIntent(): Intent {
  * Extracts file paths from the Intent's selected images (handles single and multiple selections).
  * Handles Scoped Storage for Android 10+.
  */
-fun Intent.selectedFile(): List<String> {
+fun Intent.selectedFile(context: Context): List<String> {
     val filePaths = mutableListOf<String>()
     val clipData = this.clipData
 
@@ -50,19 +50,20 @@ fun Intent.selectedFile(): List<String> {
         for (i in 0 until clipData.itemCount) {
             val uri = clipData.getItemAt(i).uri
             uri?.let {
-                val path = it.path
-                path?.let { filePaths.add(it) }
+                val path = getFilePathFromUri(it, context)
+                filePaths.add(path)
             }
         }
     } else {
         this.data?.let {
-            val path = it.path
-            path?.let { filePaths.add(it) }
+            val path = getFilePathFromUri(it, context)
+            filePaths.add(path)
         }
     }
 
     return filePaths
 }
+
 
 /**
  * Converts a Uri into a file path or copies the file to the app's cache directory
@@ -75,8 +76,7 @@ fun getFilePathFromUri(uri: Uri, context: Context): String {
         ?: throw IllegalArgumentException("Failed to open input stream")
 
     val fileName = getFileName(uri, context)
-
-    val tempFile = File(context.cacheDir, fileName)
+    val tempFile = File(context.cacheDir, "temp_$fileName")
 
     inputStream.use { stream ->
         FileOutputStream(tempFile).use { output ->
@@ -91,7 +91,6 @@ fun getCipher(mode: Int, iv: ByteArray? = null): Cipher {
     val keyStore = KeyStore.getInstance("AndroidKeyStore")
     keyStore.load(null)
     
-    // Create or retrieve the key
     if (!keyStore.containsAlias(KEY_ALIAS)) {
         val keyGenerator = KeyGenerator.getInstance(
             KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore"
@@ -111,13 +110,12 @@ fun getCipher(mode: Int, iv: ByteArray? = null): Cipher {
                     setUserAuthenticationValidityDurationSeconds(30)
                 }
             }
-            .setRandomizedEncryptionRequired(true)  // Enforce randomized encryption
+            .setRandomizedEncryptionRequired(true)
             .build()
         keyGenerator.init(keyGenParameterSpec)
         keyGenerator.generateKey()
     }
 
-    // Get the key and initialize cipher
     val key = keyStore.getKey(KEY_ALIAS, null) as SecretKey
     return Cipher.getInstance("AES/GCM/NoPadding").apply {
         if (iv != null) {
@@ -131,7 +129,7 @@ fun getCipher(mode: Int, iv: ByteArray? = null): Cipher {
 const val KEY_ALIAS = "FileEncryptionKey"
 
 fun cleanupOldCacheFiles(cacheDir: File) {
-    val maxAge = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+    val maxAge = 24 * 60 * 60 * 1000
     val currentTime = System.currentTimeMillis()
     
     cacheDir.listFiles()?.forEach { file ->

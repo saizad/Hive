@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.android.library)
+    id("com.android.library")
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("dagger.hilt.android.plugin")
@@ -10,11 +10,12 @@ plugins {
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
     id("com.google.devtools.ksp")
+    id("jacoco")
+    id("org.sonarqube") version "4.3.1.3277"
 }
 
-
 android {
-    namespace = "com.hive.mylibrary"
+    namespace = "com.hive"
     compileSdk = 35
 
     defaultConfig {
@@ -31,6 +32,10 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -39,7 +44,59 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
 }
+
+jacoco {
+    toolVersion = "0.8.10"
+}
+
+val mainClassFiles = fileTree("$buildDir/tmp/kotlin-classes/debug") {
+    exclude(
+        "**/R.class",
+        "**/R$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*"
+    )
+}
+
+tasks.register<JacocoReport>("jacocoFullCoverageReport") {
+    dependsOn("testDebugUnitTest", "connectedDebugAndroidTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    classDirectories.setFrom(files(mainClassFiles))
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+
+    executionData.setFrom(
+        fileTree(buildDir) {
+            include(
+                "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+                "outputs/code_coverage/debugAndroidTest/connected/**/*.ec"
+            )
+        }
+    )
+}
+
+
+
+tasks.named("sonar") {
+    dependsOn("jacocoFullCoverageReport")
+}
+
+sonarqube {
+    properties {
+        property("sonar.projectKey", "Hive")
+        property("sonar.projectName", "Hive")
+        property("sonar.host.url", "http://localhost:9000")
+        property("sonar.coverage.jacoco.xmlReportPaths", "$buildDir/reports/jacoco/jacocoFullCoverageReport/jacocoFullCoverageReport.xml")
+    }
+}
+
 dependencies {
 
     // **Core Libraries**
@@ -52,7 +109,6 @@ dependencies {
     implementation(libs.ui)
     implementation(libs.ui.graphics)
     implementation(libs.ui.tooling.preview)
-    implementation(libs.compose)
     implementation(libs.androidx.junit.ktx)
 
     // **Jetpack Lifecycle & Navigation**
@@ -64,9 +120,7 @@ dependencies {
     implementation(libs.androidx.animation)
 
     // **Material Design**
-    implementation(libs.material)
     implementation(libs.material3)
-    implementation(libs.androidx.material)
     implementation("androidx.compose.material3:material3-window-size-class")
 
     // **WorkManager & Hilt**
@@ -80,7 +134,6 @@ dependencies {
 
     // **Data Storage**
     implementation(libs.androidx.datastore)
-    implementation(libs.androidx.datastore.core)
     implementation(libs.androidx.datastore.preferences)
 
     // **Networking & Data**
@@ -110,11 +163,9 @@ dependencies {
     }
     implementation(libs.accompanist.permissions)
     implementation(libs.android.joda)
-    testImplementation(libs.android.joda)
 
     // **Dependency Injection (Hilt)**
     implementation(libs.hilt.android)
-    androidTestImplementation(project(":app"))
     kapt(libs.hilt.android.compiler)
 
     // **Platform-Specific**
@@ -124,13 +175,8 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test.junit5)
     testImplementation(libs.kotlin.reflect)
-    implementation(libs.jetbrains.kotlin.reflect)
-
-    // **Coroutine & Reactive Testing**
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
-
-    // **Mockito & Mocking**
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.inline)
     testImplementation(libs.mockk)
@@ -140,37 +186,22 @@ dependencies {
 
     // **Robolectric for Unit Testing**
     testImplementation(libs.robolectric)
+    testImplementation(libs.hilt.android.testing)
 
     // **Instrumentation & UI Testing**
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.runner)
-    testImplementation(libs.androidx.runner)
     androidTestImplementation(libs.androidx.navigation.testing)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.ui.test.junit4)
-
-    // **Hilt Testing**
     androidTestImplementation(libs.hilt.android.testing)
-    testImplementation(libs.hilt.android.testing)
     kaptAndroidTest(libs.hilt.android.compiler)
 
     // **Debug Dependencies**
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
 
-
-    // **Hilt Testing**
-//    androidTestImplementation(libs.hilt.android.testing)
-//    testImplementation(libs.hilt.android.testing)
-//    kaptAndroidTest(libs.hilt.android.compiler)
-
-
-    // **Dependency Injection (Hilt)**
-    implementation(libs.hilt.android)
-    androidTestImplementation(project(":app"))
-    kapt(libs.hilt.android.compiler)
     implementation("com.google.code.gson:gson:2.13.1")
     implementation("com.github.saizad:PulseField:6bcff2407e7f0a6b3fc9d9bb75d96e1128ee6138")
-
 }

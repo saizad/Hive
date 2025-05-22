@@ -26,7 +26,6 @@ class IntentUtilsTest {
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
-        // Create a test file
         testFile = File(context.cacheDir, "test_image.jpg")
         FileOutputStream(testFile).use { output ->
             output.write("test content".toByteArray())
@@ -35,10 +34,10 @@ class IntentUtilsTest {
 
     @Test
     fun getFilePathFromUri_validUri_returnsValidPath() {
-        
+
         val uri = Uri.fromFile(testFile)
 
-        
+
         val resultPath = getFilePathFromUri(uri, context)
 
         assertNotNull(resultPath)
@@ -68,7 +67,6 @@ class IntentUtilsTest {
     @After
     fun cleanup() {
         testFile.delete()
-        // Clean up any temporary files created during tests
         context.cacheDir.listFiles()?.forEach { file ->
             if (file.name.startsWith("temp_")) {
                 file.delete()
