@@ -2,10 +2,14 @@ package com.hive.exts
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 
@@ -25,4 +29,47 @@ class ComposeExtTest {
             }
         }
     }
+
+
+    @Test
+    fun customTimePickerDialog_confirmButton_callsOnConfirmAndDismiss() {
+        var confirmedHour: Int? = null
+        var confirmedMinute: Int? = null
+        var dismissed = false
+
+        composeTestRule.setContent {
+            CustomTimePickerDialog(
+                onDismiss = { dismissed = true },
+                onConfirm = { hour, min ->
+                    confirmedHour = hour
+                    confirmedMinute = min
+                }
+            )
+        }
+
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assert(confirmedHour != null)
+        assert(confirmedMinute != null)
+        assert(dismissed)
+    }
+
+    @Test
+    fun customTimePickerDialog_cancelButton_callsOnDismissOnly() {
+        var dismissed = false
+
+        composeTestRule.setContent {
+            CustomTimePickerDialog(
+                onDismiss = { dismissed = true },
+                onConfirm = { _, _ ->
+                    fail("onConfirm should not be called when Cancel is clicked")
+                }
+            )
+        }
+
+        composeTestRule.onNodeWithText("Cancel").performClick()
+
+        assert(dismissed)
+    }
+
 }

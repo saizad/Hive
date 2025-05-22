@@ -14,7 +14,10 @@
       <SelectionState runConfigName="IntentExtensionsTest1">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="test_selectedfile_extracts_file_paths_from_single_uri()">
+      <SelectionState runConfigName="ComposeExtTest">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="WarningLayoutTest">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>
