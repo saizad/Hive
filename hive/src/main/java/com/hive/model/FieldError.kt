@@ -1,6 +1,6 @@
 package com.hive.model
 
 class FieldError {
-    var message: List<String>? = null
+    var message: Any? = null
     var field: String? = null
 }
