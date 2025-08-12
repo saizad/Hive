@@ -203,5 +203,7 @@ dependencies {
     debugImplementation(libs.ui.test.manifest)
 
     implementation("com.google.code.gson:gson:2.13.1")
-    implementation("com.github.saizad:PulseField:6bcff2407e7f0a6b3fc9d9bb75d96e1128ee6138")
+//    implementation("com.github.saizad:PulseField:4966813efd")
+    implementation("com.github.saizad:PulseField:4966813efd0b7e3ffe5133b7f9067f03dcd54997")
+
 }

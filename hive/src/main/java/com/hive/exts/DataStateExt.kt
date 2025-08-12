@@ -2,9 +2,9 @@ package com.hive.exts
 
 import com.hive.ApiErrorException
 import com.hive.DataState
-import com.hive.UiData
 import com.hive.model.BaseApiError
 import com.hive.model.DataModel
+import com.hive.model.IntPageDataModel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -53,6 +53,84 @@ fun <T> Flow<DataState<DataModel<T>>>.requireExtractDataFromDataModel(): Flow<T>
     return extractDataModel().mapNotNull {
         it.data ?: throw IllegalStateException("DataModel data is null")
     }
+}
+
+// IntPageDataModel extraction extensions - add these to DataStateExt.kt
+
+fun <T> Flow<DataState<IntPageDataModel<T>>>.extractIntPageDataModel(): Flow<IntPageDataModel<T>> {
+    return filterSuccess().mapNotNull { it.data }
+}
+
+fun <T> Flow<DataState<IntPageDataModel<T>>>.extractDataFromIntPageDataModel(): Flow<List<T>?> {
+    return extractIntPageDataModel().map { it.data }
+}
+
+fun <T> Flow<DataState<IntPageDataModel<T>>>.requireExtractDataFromIntPageDataModel(): Flow<List<T>> {
+    return extractIntPageDataModel().mapNotNull {
+        it.data
+    }
+}
+
+// Extract pagination info
+fun <T> Flow<DataState<IntPageDataModel<T>>>.extractPageInfo(): Flow<Triple<Int, Int, Int>> {
+    return extractIntPageDataModel().map {
+        Triple(it.page, it.totalPages, it.total)
+    }
+}
+
+// Extract current page number
+fun <T> Flow<DataState<IntPageDataModel<T>>>.extractCurrentPage(): Flow<Int> {
+    return extractIntPageDataModel().map { it.page }
+}
+
+// Extract total pages
+fun <T> Flow<DataState<IntPageDataModel<T>>>.extractTotalPages(): Flow<Int> {
+    return extractIntPageDataModel().map { it.totalPages }
+}
+
+// Extract total items count
+fun <T> Flow<DataState<IntPageDataModel<T>>>.extractTotalCount(): Flow<Int> {
+    return extractIntPageDataModel().map { it.total }
+}
+
+// Extract per page count
+fun <T> Flow<DataState<IntPageDataModel<T>>>.extractPerPageCount(): Flow<Int> {
+    return extractIntPageDataModel().map { it.perPage }
+}
+
+// Check if there's a next page
+fun <T> Flow<DataState<IntPageDataModel<T>>>.hasNextPage(): Flow<Boolean> {
+    return extractIntPageDataModel().map { it.nextPage() != null }
+}
+
+// Check if there's a previous page
+fun <T> Flow<DataState<IntPageDataModel<T>>>.hasPreviousPage(): Flow<Boolean> {
+    return extractIntPageDataModel().map { it.previousPage() != null }
+}
+
+// Get next page number if available
+fun <T> Flow<DataState<IntPageDataModel<T>>>.getNextPage(): Flow<Int?> {
+    return extractIntPageDataModel().map { it.nextPage() }
+}
+
+// Get previous page number if available
+fun <T> Flow<DataState<IntPageDataModel<T>>>.getPreviousPage(): Flow<Int?> {
+    return extractIntPageDataModel().map { it.previousPage() }
+}
+
+// Check if current page is empty
+fun <T> Flow<DataState<IntPageDataModel<T>>>.isCurrentPageEmpty(): Flow<Boolean> {
+    return extractDataFromIntPageDataModel().map { it?.isEmpty() == true }
+}
+
+// Check if this is the first page
+fun <T> Flow<DataState<IntPageDataModel<T>>>.isFirstPage(): Flow<Boolean> {
+    return extractCurrentPage().map { it == 1 }
+}
+
+// Check if this is the last page
+fun <T> Flow<DataState<IntPageDataModel<T>>>.isLastPage(): Flow<Boolean> {
+    return extractIntPageDataModel().map { it.page == it.totalPages }
 }
 
 // Reuse for common error-handling flows
@@ -225,18 +303,6 @@ fun <M, E : BaseApiError> NeverErrorObservable<M>.requestToFlow(
 
     }
 }
-
-fun <T> Flow<DataState<T>>.toUiDataFlow(): Flow<UiData<T>> =
-    map { dataState ->
-        val extractedData = when (dataState) {
-            is DataState.Success -> dataState.data
-            else -> null
-        }
-        UiData(
-            data = extractedData,
-            state = dataState
-        )
-    }
 
 fun <T> DataState<T>?.shouldShowEmptyState(): Boolean {
     return this is DataState.Success && (data as? List<*>)?.isEmpty() == true
