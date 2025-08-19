@@ -69,25 +69,26 @@ val <T> Observable<T>.toFlow: Flow<T>
         return callbackFlow(block)
     }
 
-fun intervalFlow(duration: Long, interval: Long): Flow<Long> = flow {
-    val endTime = System.currentTimeMillis() + duration
-    while (System.currentTimeMillis() < endTime) {
-        emit(endTime - System.currentTimeMillis())
-        delay(interval)
-    }
-}
-
-
-fun intervalFlow(interval: Long): Flow<Unit> = flow {
+fun timerFlow(
+    intervalMillis: Long,
+    maxDuration: Long? = null,
+    startOffsetMillis: Long = 0L,
+    startTime: Long = System.currentTimeMillis(),
+    reverse: Boolean = false
+): Flow<Long> = flow {
     while (true) {
-        emit(Unit) // Emits a value
-        delay(interval) // Waits before emitting the next value
+        val elapsed = System.currentTimeMillis() - startTime + startOffsetMillis
+
+        val value = when {
+            reverse && maxDuration != null -> (maxDuration - elapsed).coerceAtLeast(0L)
+            else -> maxDuration?.let { elapsed.coerceAtMost(it) } ?: elapsed
+        }
+
+        emit(value)
+
+        if ((reverse && value <= 0L) || (!reverse && maxDuration != null && elapsed >= maxDuration)) break
+
+        delay(intervalMillis)
     }
 }
-
-
-val MutableStateFlow<Int>.emitRefresh: Unit
-    get() {
-        value = value.inc()
-    }
 
