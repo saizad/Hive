@@ -443,15 +443,15 @@ object ApiErrorUtils {
 }
 
 // Enhanced ErrorModel companion object methods
-fun ErrorModel.Companion.generateDetailedErrorMessage(errorModel: ErrorModel): String {
+fun ErrorModel.generateDetailedErrorMessage(errorModel: ErrorModel): String {
     return errorModel.getUserFriendlyMessage()
 }
 
-fun ErrorModel.Companion.extractFieldNames(errorModel: ErrorModel): List<String> {
+fun ErrorModel.extractFieldNames(errorModel: ErrorModel): List<String> {
     return errorModel.error.getAllFieldNames()
 }
 
-fun ErrorModel.Companion.hasSpecificField(errorModel: ErrorModel, fieldName: String): Boolean {
+fun ErrorModel.hasSpecificField(errorModel: ErrorModel, fieldName: String): Boolean {
     return errorModel.hasFieldError(fieldName)
 }
 
